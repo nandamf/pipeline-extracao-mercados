@@ -1,0 +1,1 @@
+function o(e) { return e ? `?${Object.entries(e).filter(([r, n]) => n !== void 0).map(([r, n]) => `${encodeURIComponent(r)}=${encodeURIComponent(String(n))}`).join("&")}` : "" } function i({ path: e, params: t }) { return `${e}${o(t)}` } export { i as g };

@@ -1,0 +1,32 @@
+# Arquivo .gitignore para o projeto Extract Mercados
+
+# Ignorar pastas de dados gerados pela pipeline
+# Estes dados não devem ser versionados
+data/
+
+# Ignorar arquivos de log
+*.log
+
+# Ignorar a pasta de inputs, já que o `produtos.csv` é gerado pelo script
+inputs/
+
+# Ignorar arquivos de ambiente virtual do Python
+venv/
+.venv/
+env/
+.env
+*.env
+
+# Ignorar pastas de cache do Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignorar arquivos de configuração de IDEs
+.vscode/
+.idea/
+
+# Ignorar arquivos de sistema operacional
+.DS_Store
+Thumbs.db
