@@ -1,655 +1,275 @@
-# Extract Mercados - Data Lake ETL Project
+# 🛒 Retail Data Engineering Pipeline
 
-**Professional portfolio project:** Supermarket price monitoring system with enterprise-grade Data Lake architecture.
+A production-ready Data Engineering project that collects, processes, and analyzes supermarket product data using a modern Medallion Architecture (Bronze, Silver, Gold).
 
----
-
-## 🎯 Project Overview
-
-A production-ready ETL pipeline that extracts product data from three major Brazilian supermarket chains and stores them in a professional Data Lake following real-world Data Engineering practices.
-
-### Current Markets
-
-- **Atacadão** - Wholesale prices (GraphQL API)
-- **Carrefour** - Retail prices (Web scraping)  
-- **Mix Mateus** - Retail prices (Algolia API)
-
-### Architecture Layers
-
-```
-Scrapers (Extraction)
-    ↓
-Bronze Layer (Raw Data) ✅ IMPLEMENTED
-    ↓
-Silver Layer (Transformation) ✅ IMPLEMENTED
-    ↓
-Gold Layer (Analytics) ✅ IMPLEMENTED
-    ↓
-BigQuery + Looker Studio [Future]
-```
+This project demonstrates the design and implementation of a scalable ETL pipeline capable of extracting data from multiple retailers, validating and standardizing product information, and generating analytics-ready datasets for Business Intelligence platforms.
 
 ---
 
-## 📦 What's Included
+## 🚀 Features
 
-### Core Modules
+- Multi-source web scraping
+- API integration (GraphQL & REST)
+- Modular scraper architecture
+- Automated ETL pipeline
+- Bronze, Silver and Gold Data Lake layers
+- Product normalization
+- EAN validation
+- Data quality scoring
+- Duplicate detection and removal
+- Partitioned Parquet storage
+- Metadata and lineage tracking
+- Production-ready logging
+- Cloud-ready architecture
 
-```
-scrapers/                   → Extraction layer
-├── registry.py            → Factory pattern for scraper instantiation
-├── base.py                → Abstract base scraper
-├── http_client.py         → HTTP client with retry logic
-├── atacadao/              → Atacadão GraphQL scraper
-├── carrefour/             → Carrefour web scraper
-└── mix_mateus/            → Mix Mateus Algolia scraper
+---
 
-common/                     → Shared utilities
-├── bronze_writer.py       → Bronze layer storage ✅
-├── bronze_integration_examples.py  → Code patterns ✅
-├── normalizers.py         → ✨ Silver: Normalization functions ✅
-├── quality_checks.py      → ✨ Silver: Quality validation ✅
-├── silver_transformer.py  → ✨ Silver: ETL orchestrator ✅
-├── gold_kpis.py          → Gold KPI engine ✅
-├── gold_transformer.py   → Gold analytics ETL ✅
-├── base_scraper.py        → Base class
-├── models.py              → Data models
-├── database.py            → SQLite utilities
-└── save.py                → CSV export utilities
+# 📊 Architecture
 
-data/                       → Data storage
-├── bronze/                → Immutable raw data ✅
-│   └── market=*/year=*/month=*/day=*/run_id=*/
-│       ├── data_batch.parquet       (Parquet, compressed)
-│       ├── raw_payload.json         (JSONL audit trail)
-│       ├── metadata.json            (Execution stats)
-│       └── _SUCCESS                 (Atomic marker)
-├── silver/                → Normalized data ✅
-│   └── market=*/year=*/month=*/day=*/transformation_id=*/
-│       ├── products_normalized.parquet    (Cleaned & deduplicated)
-│       ├── transformation_metadata.json   (Lineage)
-│       └── _SUCCESS                      (Completion marker)
-└── gold/                  → Analytics tables ✅
-
-tests/                      → Unit tests
-└── test_*.py              → Market-specific tests
-
-Documentation:            → Professional guides
-├── BRONZE_ARCHITECTURE.md          → Bronze design ✅
-├── BRONZE_QUICKSTART.md            → Bronze setup ✅
-├── BRONZE_OPERATIONS.md            → Bronze ops ✅
-├── SILVER_ARCHITECTURE.md          → Silver design ✅
-├── SILVER_QUICKSTART.md            → Silver setup ✅
-├── SILVER_OPERATIONS.md            → Silver ops ✅
-├── SILVER_DELIVERY_SUMMARY.md      → Silver complete ✅
-├── GOLD_ARCHITECTURE.md            → Gold design ✅
-├── GOLD_QUICKSTART.md              → Gold setup ✅
-└── IMPLEMENTATION_ROADMAP.md       → Project roadmap ✅
-
-Demos:
-├── run_bronze_demo.py              → Bronze end-to-end ✅
-├── run_silver_demo.py              → Silver end-to-end ✅
-└── run_gold_demo.py                → Gold analytics end-to-end ✅
+```text
+                    Supermarket APIs / Websites
+                               │
+                               ▼
+                        Web Scrapers
+                               │
+                               ▼
+                     Bronze Layer (Raw Data)
+                               │
+                               ▼
+              Silver Layer (Clean & Standardized)
+                               │
+                               ▼
+                Gold Layer (Analytics & KPIs)
+                               │
+                               ▼
+                    BigQuery (Next Phase)
+                               │
+                               ▼
+                    Looker Studio Dashboard
+                               ▲
+                               │
+                    Airflow Orchestration
 ```
 
 ---
 
-## 🚀 Quick Start
+# 🏗 Project Overview
 
-### Phase 1: Extract & Store Raw Data (Bronze)
+The pipeline automatically extracts product information from multiple Brazilian supermarket retailers and processes it through a complete Data Lake architecture.
 
-```bash
-python run_bronze_demo.py
-```
+Currently supported retailers:
 
-**Output**: Raw data in `data/bronze/market=*/year=*/month=*/day=*/run_id=/`
+- ✅ Atacadão (GraphQL)
+- ✅ Carrefour
+- ✅ Mix Mateus (Algolia API)
 
-### Phase 2: Transform & Normalize Data (Silver)
-
-```bash
-python run_silver_demo.py
-```
-
-**Output**: Clean data in `data/silver/market=*/year=*/month=*/day=*/transformation_id=/`
-
-**What happens**:
-1. Discovers all Bronze files
-2. Transforms to Silver (normalizes, deduplicates, validates)
-3. Displays quality reports
-4. Shows summary statistics
-
-### Phase 3: Build BI-Ready Analytics (Gold)
-
-```bash
-python run_gold_demo.py
-```
-
-**Output**: Analytics datasets in `data/gold/`
-
-**What happens**:
-1. Loads Silver normalized data
-2. Builds snapshot and price history tables
-3. Computes market, product, and category KPIs
-4. Writes Looker Studio / BigQuery-ready Parquet files
-
-### Phase 4: Analyze Results
-
-```python
-import pandas as pd
-
-# Read normalized data
-df = pd.read_parquet("data/silver/market=atacadao/.../products_normalized.parquet")
-
-print(f"Records: {len(df)}")
-print(f"Quality Score (avg): {df['quality_score'].mean():.1f}/100")
-print(f"Valid EANs: {df['ean_valid'].sum()}/{len(df)}")
-print(f"\nTop brands:\n{df['brand_normalized'].value_counts().head()}")
-```
+The project was designed with scalability in mind, allowing new retailers to be added without changing the pipeline orchestration.
 
 ---
 
-## 📊 Normalization Examples
+# 🥉 Bronze Layer
 
-### Before & After
+The Bronze layer stores immutable raw data exactly as received from each retailer.
 
-| Field | Input | Output |
-|-------|-------|--------|
-| **Product Name** | `"  LEITE  PARMALAT 1L  "` | `"Leite Parmalat 1000ml"` |
-| **Price** | `"R$ 4,50"` | `4.50` (float) |
-| **Unit** | `"L"` | `"L"` (normalized) |
-| **Category** | `"Laticínios"` | `"Laticínios"` (mapped) |
-| **Brand** | `"PARMALAT S/A"` | `"Parmalat"` (cleaned) |
-| **EAN** | `"7894001234567"` | `valid=true` (checksum verified) |
+### Responsibilities
 
-### Quality Metrics
-
-```
-✓ Data Completeness: 90% (6 of 7 key fields)
-✓ Quality Score: 95.5/100
-✓ Valid EANs: 85% of records
-✓ Duplicates Removed: 3 records
-✓ All quality thresholds passed
-```
+- Raw data ingestion
+- Audit trail preservation
+- Metadata generation
+- Schema preservation
+- Partitioned Parquet storage
 
 ---
 
-## 2. Run the Demo
+# 🥈 Silver Layer
 
-```bash
-python run_silver_demo.py
-```
+The Silver layer transforms raw data into standardized datasets.
 
-**What it does:**
-- Discovers Bronze Parquet files
-- Transforms to Silver (normalizes, deduplicates)
-- Validates quality
-- Displays results and metadata
+### Transformations
 
-**Output:**
-```
-data/silver/
-├── market=atacadao/year=2025/month=03/day=15/transformation_id=20250315_SV_a1b2/
-│   ├── products_normalized.parquet
-│   ├── transformation_metadata.json
-│   └── _SUCCESS
-├── market=carrefour/year=2025/month=03/day=15/transformation_id=20250315_SV_c3d4/
-│   └── ...
-└── market=mix_mateus/year=2025/month=03/day=15/transformation_id=20250315_SV_e5f6/
-    └── ...
-```
-
-### 3. Use the Silver Data
-
-```python
-import pandas as pd
-
-# Read normalized Parquet
-df = pd.read_parquet("data/silver/market=atacadao/.../products_normalized.parquet")
-
-# Explore
-print(f"Records: {len(df)}")
-print(f"Quality score avg: {df['quality_score'].mean():.1f}/100")
-print(f"Duplicates removed: {df['duplicate_count'].sum()}")
-
-# View normalized products
-display_cols = ['product_name_normalized', 'brand_normalized', 'category_normalized', 'price', 'quality_score']
-print(df[display_cols].head())
-```
+- Product name normalization
+- Price normalization
+- Unit standardization
+- Brand cleaning
+- Category mapping
+- EAN checksum validation
+- Duplicate removal
+- Quality score calculation
 
 ---
 
-## 📚 Documentation
+# 🥇 Gold Layer
 
-### For Different Audiences
+The Gold layer generates business-ready datasets optimized for analytics.
 
-**Getting Started?**
-→ Run: `python run_silver_demo.py`  
-→ Read: [SILVER_QUICKSTART.md](SILVER_QUICKSTART.md)
+### Outputs
 
-**Understanding the design?**
-→ Read: [SILVER_ARCHITECTURE.md](SILVER_ARCHITECTURE.md)
-
-**Operating in production?**
-→ Read: [SILVER_OPERATIONS.md](SILVER_OPERATIONS.md)
-
-**Complete overview?**
-→ Read: [SILVER_DELIVERY_SUMMARY.md](SILVER_DELIVERY_SUMMARY.md)
-
-**Project roadmap?**
-→ Read: [IMPLEMENTATION_ROADMAP.md](IMPLEMENTATION_ROADMAP.md)
-
----
-
-## 🔄 Data Pipeline
-
-### Bronze Layer (Implemented ✅)
-
-**Purpose**: Immutable raw data storage  
-**Storage**: `data/bronze/`  
-**Format**: Parquet (efficient) + JSONL (audit)  
-**Partitioning**: market/year/month/day/run_id  
-**Metadata**: Automatic tracking, null rates, batch ID  
-**Size**: ~90% compressed vs CSV
-
-**Key Features:**
-- ✅ Dual storage (Parquet + JSONL)
-- ✅ Automatic schema validation
-- ✅ Data quality tracking
-- ✅ Atomic writes with _SUCCESS markers
-- ✅ Full audit trail
-- ✅ Ready for BigQuery migration
-
-### Silver Layer (Implemented ✅)
-
-**Purpose**: Clean, normalized, deduplicated data ready for analytics  
-**Storage**: `data/silver/`  
-**Format**: Parquet only  
-**Partitioning**: market/year/month/day/transformation_id  
-**Compression**: 90% (100MB → 10MB)
-
-**Transformations**:
-- Normalize product names (trim, title case, remove special chars)
-- Validate & standardize prices
-- Standardize units (L→ml, kg→g, etc)
-- Map categories to standard taxonomy
-- Clean brand names (remove suffixes, apply aliases)
-- Validate EAN codes (checksum verification)
-- Calculate quality scores (0-100)
-
-**Deduplication** (3 levels):
-- Exact match: (market, EAN, date) → keep best
-- Cross-market: Same EAN across markets → compare prices
-- Fuzzy: Same normalized name + price ±5% → flag
-
-**Quality Checks**:
-- ✅ Null rate validation (per-field thresholds)
-- ✅ Price range validation (0.01 - 100,000)
-- ✅ EAN format validation (≥80% valid)
-- ✅ Duplicate detection & removal
-- ✅ Data completeness scoring
-- ✅ Quality scoring (0-100)
-
-**Modules**:
-- `common/normalizers.py` - 600+ lines, 9 normalization functions
-- `common/quality_checks.py` - 450+ lines, 7 validation checks
-- `common/silver_transformer.py` - 500+ lines, main ETL
-
-**Documentation**:
-- `SILVER_ARCHITECTURE.md` - 3,000+ words design guide
-- `SILVER_QUICKSTART.md` - 1,500+ words setup guide
-- `SILVER_OPERATIONS.md` - 2,000+ words operations manual
-- `SILVER_DELIVERY_SUMMARY.md` - 2,500+ words complete overview
-
-**Demo**: `python run_silver_demo.py`
-
-### Gold Layer (Next Phase) 🔜
-
-**Purpose**: Aggregated business analytics tables  
-**Operations**:
-- Price comparison table
-- Market analytics
-- Trend analysis
 - Product catalog
+- Price comparison
+- Market KPIs
+- Category analytics
+- Historical price datasets
 
 ---
 
-## 💻 Usage Examples
+# ⚙️ Tech Stack
 
-### Example 1: Simple Search + Store
+## Languages
 
-```python
-from scrapers.registry import get_scraper
-from common.bronze_writer import BronzeWriter
+- Python
+- SQL
 
-# Initialize
-bronze = BronzeWriter()
-scraper = get_scraper("atacadao")
+## Data Engineering
 
-# Search
-results = scraper.search(search_term="leite", cep="04543010", max_pages=1)
+- Pandas
+- PyArrow
+- Parquet
+- ETL
+- Data Lake
+- Medallion Architecture
 
-# Store
-result = bronze.write_batch(
-    market="atacadao",
-    search_term="leite",
-    records=results,
-    cep="04543010"
-)
+## Web Scraping
 
-print(f"✓ Stored {result.records_written} records")
-print(f"  Location: {result.metadata_path}")
-```
+- BeautifulSoup
+- GraphQL
+- REST APIs
 
-### Example 2: Process All Markets
+## Data Storage
 
-```python
-markets = ["atacadao", "carrefour", "mix_mateus"]
+- SQLite
+- Parquet
 
-for market in markets:
-    scraper = get_scraper(market)
-    cep = "04543010" if market == "atacadao" else None
-    
-    results = scraper.search(search_term="leite", cep=cep, max_pages=1)
-    
-    if results:
-        result = bronze.write_batch(market=market, search_term="leite", records=results, cep=cep)
-        print(f"✓ {market}: {result.records_written} records")
-```
+## Development
 
-### Example 3: Query Bronze Data
-
-```python
-import pandas as pd
-from pathlib import Path
-import glob
-
-# Read all Atacadão data
-pattern = "data/bronze/market=atacadao/*/*/*/run_id=*/data_batch.parquet"
-files = glob.glob(pattern)
-
-dfs = [pd.read_parquet(f) for f in files]
-df = pd.concat(dfs, ignore_index=True)
-
-# Analyze
-print(f"Total records: {len(df)}")
-print(df['product_name'].value_counts().head(10))
-```
+- Git
+- Pytest
+- Logging
 
 ---
 
-## 📊 Architecture Principles
+# 📂 Project Structure
 
-### 1. **Immutability**
-Raw data never changes. Only new data is added.
-
-### 2. **Traceability**
-Every record has metadata: when extracted, by which scraper, run ID.
-
-### 3. **Scalability**
-Partitioned by date and market for efficient querying.
-
-### 4. **Cloud-Ready**
-Parquet format enables direct BigQuery ingestion.
-
-### 5. **Cost-Efficient**
-90% compression with Parquet. No cloud costs (local storage).
-
----
-
-## 🎓 What This Demonstrates
-
-### Technical Skills
-- ✅ ETL pipeline design
-- ✅ Data partitioning & organization
-- ✅ Schema management & validation
-- ✅ Data quality monitoring
-- ✅ Metadata & lineage tracking
-- ✅ Error handling & logging
-
-### Best Practices
-- ✅ Reusable modular code (BronzeWriter)
-- ✅ Configuration management
-- ✅ Atomic writes & idempotency
-- ✅ Production-grade patterns
-- ✅ Professional documentation
-
-### Enterprise Thinking
-- ✅ Zero infrastructure costs
-- ✅ Scalable architecture
-- ✅ Cloud migration ready
-- ✅ Data governance (auditability)
-- ✅ Real-world workflows
-
----
-
-## 🧪 Testing
-
-```bash
-# Run all tests
-python -m pytest tests/
-
-# Run specific test
-python -m pytest tests/test_atacadao.py -v
-
-# Run with coverage
-pytest --cov=scrapers --cov=common tests/
-```
-
----
-
-## 📈 Monitoring
-
-### Check Data Quality
-
-```python
-from common.bronze_writer import BronzeWriter
-
-# Read metadata from latest run
-import json
-metadata = json.load(open("data/bronze/market=atacadao/.../metadata.json"))
-
-print(f"Records: {metadata['data_quality']['total_records']}")
-print(f"Null rates: {metadata['data_quality']['null_rates']}")
-print(f"Duration: {metadata['execution']['duration_seconds']}s")
-```
-
-### Monitor Storage
-
-```bash
-# Check Bronze layer size
-du -sh data/bronze/
-
-# List latest runs
-find data/bronze -name "metadata.json" | sort | tail -5
-```
-
----
-
-## 🚀 Next Steps
-
-### This Week
-- [x] ✅ Bronze layer implementation
-- [ ] Integrate with daily tasks
-- [ ] Create monitoring dashboard
-
-### Next 2-4 Weeks
-- [ ] Implement Silver layer (deduplication)
-- [ ] Add data quality tests
-- [ ] Set up automated ETL
-
-### 1-3 Months
-- [ ] Implement Gold layer (analytics tables)
-- [ ] Build dashboards
-- [ ] Plan BigQuery migration
-
----
-
-## 🏗️ Project Structure
-
-```
+```text
 extract_mercados/
-│
-├── scrapers/               → Market scrapers
-│   ├── __init__.py
-│   ├── base.py
-│   ├── registry.py
-│   ├── http_client.py
-│   ├── atacadao/
-│   ├── carrefour/
-│   └── mix_mateus/
-│
-├── common/                 → Shared utilities
-│   ├── __init__.py
-│   ├── bronze_writer.py           ✨ NEW
-│   ├── bronze_integration_examples.py  ✨ NEW
-│   ├── models.py
-│   ├── database.py
-│   └── save.py
-│
-├── data/                   → Data storage
-│   ├── bronze/                    ✨ NEW
-│   ├── silver/                    (future)
-│   └── gold/                      (future)
-│
-├── tests/                  → Unit tests
-│   ├── test_atacadao.py
-│   ├── test_carrefour.py
-│   ├── test_mix_mateus.py
-│   └── ...
-│
-├── Documentation/          ✨ NEW
-│   ├── BRONZE_ARCHITECTURE.md
-│   ├── BRONZE_QUICKSTART.md
-│   ├── BRONZE_OPERATIONS.md
-│   └── IMPLEMENTATION_ROADMAP.md
-│
-├── run_bronze_demo.py              ✨ NEW
-│
-└── README.md               (this file)
+
+├── scrapers/
+├── common/
+├── data/
+│   ├── bronze/
+│   ├── silver/
+│   └── gold/
+├── tests/
+├── docs/
+├── run_pipeline.py
+└── README.md
 ```
 
 ---
 
-## 🔧 Configuration
-
-### BronzeWriter Defaults (Recommended)
-
-```python
-from common.bronze_writer import BronzeWriter
-
-# Uses optimal defaults:
-# - Compression: Gzip
-# - Schema validation: Enabled
-# - Raw payloads: Preserved
-# - Base path: data/bronze
-
-bronze_writer = BronzeWriter()
-```
-
-### Custom Configuration
-
-```python
-from common.bronze_writer import BronzeWriter, BronzeWriteConfig
-from pathlib import Path
-
-config = BronzeWriteConfig(
-    base_path=Path("custom/data/lake"),
-    compress=True,
-    schema_validation=True,
-    preserve_raw_payloads=True
-)
-
-bronze_writer = BronzeWriter(config)
-```
-
----
-
-## 🐛 Troubleshooting
-
-### Issue: Missing Module
+# ▶ Pipeline Execution
 
 ```bash
-# Install missing package
-pip install pandas pyarrow
-
-# Verify
-python -c "import pandas, pyarrow; print('✓ Ready')"
+python run_pipeline.py
 ```
 
-### Issue: No Data Generated
+Pipeline workflow:
 
-```python
-# Verify scrapers work
-from scrapers.registry import get_scraper
-
-scraper = get_scraper("atacadao")
-results = scraper.search(search_term="leite", cep="04543010")
-
-print(f"Results: {len(results)}")  # Should be > 0
+```text
+Generate EANs
+      │
+      ▼
+Extraction
+      │
+      ▼
+Bronze
+      │
+      ▼
+Silver
+      │
+      ▼
+Gold
 ```
 
-### Issue: Bronze Folder Not Found
+---
 
-```bash
-# Create it manually if needed
-mkdir -p data/bronze
+# 📈 What This Project Demonstrates
 
-# Check permissions
-ls -la data/
-```
+This project showcases practical experience with modern Data Engineering concepts, including:
 
-See [BRONZE_OPERATIONS.md](BRONZE_OPERATIONS.md#troubleshooting) for more solutions.
+- ETL pipeline development
+- Data Lake architecture
+- Medallion Architecture
+- Web Scraping
+- API Integration
+- Data Validation
+- Data Quality Monitoring
+- Metadata & Lineage
+- Partitioned Data Storage
+- Production Logging
+- Modular Software Design
+- Scalable Data Processing
 
 ---
 
-## 📞 Getting Help
+# 📊 Current Status
 
-1. **Quick questions?** → Check [BRONZE_QUICKSTART.md](BRONZE_QUICKSTART.md)
-2. **Design questions?** → Read [BRONZE_ARCHITECTURE.md](BRONZE_ARCHITECTURE.md)
-3. **Reference needed?** → See [BRONZE_OPERATIONS.md](BRONZE_OPERATIONS.md)
-4. **Code examples?** → Review [common/bronze_integration_examples.py](common/bronze_integration_examples.py)
-5. **Working demo?** → Run `python run_bronze_demo.py`
+## ✅ Completed
 
----
+- Multi-market scraping
+- Bronze layer
+- Silver layer
+- Gold layer
+- Automated ETL pipeline
+- Data normalization
+- Data quality validation
+- EAN verification
+- Duplicate detection
+- Metadata generation
+- Partitioned Parquet storage
+- Unit tests
 
-## 📄 License
+## 🚧 Planned Improvements
 
-Portfolio Project - Feel free to use as reference
-
----
-
-## 🎯 Key Takeaways
-
-This project demonstrates:
-
-✅ **Professional Data Lake architecture**  
-✅ **Enterprise-grade ETL practices**  
-✅ **Zero infrastructure costs**  
-✅ **Production-ready code quality**  
-✅ **Scalable to 1M+ records**  
-✅ **Cloud migration ready**  
-
-**Perfect for:**
-- Data Engineering interviews
-- Portfolio showcasing
-- Real-world learning
-- Production adaptations
+- BigQuery integration
+- Looker Studio dashboards
+- Apache Airflow orchestration
+- Docker support
+- CI/CD pipeline
 
 ---
 
-## 📈 Metrics
+# 📚 Documentation
 
-- **3 markets** monitored
-- **100s-1000s** products per market
-- **90% compression** with Parquet
-- **5-10 minute** full pipeline run
-- **Zero** infrastructure costs
+Additional technical documentation is available in the **docs/** directory.
 
----
-
-**Last Updated**: 2025-03-15  
-**Status**: Production Ready  
-**Version**: 1.0.0
+- Bronze Architecture
+- Silver Architecture
+- Gold Architecture
+- Operations Guide
+- Quick Start Guide
+- Implementation Roadmap
 
 ---
 
-Ready to get started? Run `python run_bronze_demo.py` 🚀
+# 🎯 Project Goals
+
+This project was developed to demonstrate real-world Data Engineering practices used in production environments.
+
+It focuses on building scalable ETL pipelines capable of collecting data from multiple sources, ensuring data quality, and delivering analytics-ready datasets while following industry best practices.
+
+---
+
+# 🔮 Future Roadmap
+
+- Cloud-native architecture with Google BigQuery
+- Automated workflow orchestration using Apache Airflow
+- Business dashboards with Looker Studio
+- Dockerized deployment
+- CI/CD with GitHub Actions
+- Support for additional supermarket retailers
+
+---
+
+# 📄 License
+
+This project was developed for educational and portfolio purposes.
